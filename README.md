@@ -1,4 +1,3 @@
-# Construção de diagramas de controle estatísticos aplicados à vigilância em saúde, especificamente no monitoramento da dengue (R)
 
 <br>
 
@@ -10,7 +9,8 @@
 
 <br> 
 
-#
+# Controle estatísticos aplicados à vigilância em saúde, especificamente no monitoramento da dengue (R)
+
 
 Este repositório contém o código para a construção de diagramas de controle estatísticos aplicados à vigilância em saúde, especificamente no monitoramento da dengue. O objetivo é utilizar técnicas de controle estatístico de processos (CEP) para analisar dados epidemiológicos, identificar padrões e detectar possíveis surtos de dengue com base em indicadores como número de casos confirmados, taxa de incidência e outros fatores relacionados.
 
@@ -317,3 +317,148 @@ abline(
 
 <br> 
  Observe que, embora tenhamos em 2013 taxas mais altas que os demais anos, apenas seus outliers tocam a linha de **cor laranja (média incidência)**. Ou seja, 2013 possui magnitude menor que os demais anos e o seu valor do terceiro quartil é inferior a 50%, por isso o incluiremos como ano não epidêmico. Assim, selecionaremos para a construção do diagrama de controle os anos de 2012, 2013, 2014, 2017 e 2018, pois são anos não epidêmicos - estão abaixo da baixa incidência de casos.
+
+### não epidêmicos  {nao_epidemic}
+ Os anos não epidêmicos que levaremos em conta na criação do diagrama de controle, precisamos criar o objeto {nao_epidemic} que armazenará (receberá) esses anos.
+
+-   Dados armazenados no objeto {nao_epidemic}
+```R
+# Criando o objeto {`nao_epidemic`} com anos não epidêmicos
+nao_epidemic <- c(2012, 2013, 2014, 2017, 2018)
+```  
+
+Analisando o comportamento de dengue em Foz do Iguaçu/PR em 2022 e, para isso, estamos comparando os dados deste ano com os demais anos não epidêmicos escolhidos (2012, 2013, 2014, 2017 e 2018) em um diagrama de controle. 
+
+Continuando a Análise de Dados de Dengue:
+
+1.  **Criar o objeto dengue_2022**: Vamos criar um objeto que armazenará os dados filtrados para o ano de 2022.
+
+2.  **Filtrar os dados**: Usaremos a **função filter()** do pacote dplyr para selecionar os dados específicos de 2022, combinada com a **função year()** do pacote lubridate para extrair o ano da coluna de datas.
+
+3.  **criar uma nova coluna para as semanas epidemiológicas**: Usaremos a função **mutate()** para criar uma coluna adicional que conterá as semanas epidemiológicas extraídas da data de início da semana epidemiológica **(data_iniSE)**.
+
+```R
+# Criando o objeto {`dengue_2022`} com ano de 2022
+dengue_2022 <- dengue_foz |>
+  
+  # Filtrando o ano para 2022
+  filter(year(data_iniSE) == 2022) |>
+  
+  # Criando uma nova coluna chamada 'sem_epi', referente à semana epidemiológica
+  mutate(sem_epi = epiweek(data_iniSE))
+
+```
+
+Esta etapa é importante, pois criaremos a tabela {dengue_stat} com cinco variáveis calculadas: a média, desvio padrão e limites superior e inferior da taxa de incidência por semana epidemiológica para plotar no gráfico. Para isso será necessário:
+
+1.  Filtrar utilizando as funções **filter() e year()**, os anos não epidêmicos utilizando o operador **%in%** que retorna **TRUE**  quando o ano está contido no vetor nao_epidemic.
+2.  Utilizar a função **mutate()** para extrair da data de início da semana epidemiológica o número da semana e atribuir seu valor a sem_epi.
+3.  Agrupar com a função **group_by()** os dados por semana, ou seja, teremos os dados por semana para cada ano selecionado.
+4.  Utilizar a função **summarise()** e **criar a média, desvio padrão e os limites máximo e mínimo** para cada uma das semanas epidemiológicas dos períodos não epidêmicos.
+
+``` R
+# Criando o gráfico com o diagrama de controle 
+dengue_stat <- dengue_foz |>
+  
+  # Filtrando os dados da série em que o ano não é epidêmico
+  filter(year(data_iniSE) %in% nao_epidemic) |>
+  
+  # Criando uma nova coluna chamada 'sem_epi', referente à semana epidemiológica
+  mutate(sem_epi = epiweek(data_iniSE)) |>
+  
+  # Agrupando os dados pela semana epidemiológica
+  group_by(sem_epi) |>
+  
+  # Criando medidas-resumo e limites superior e inferior
+  summarise(
+    n = n(),
+    media = mean(p_inc100k, na.rm = TRUE),
+    desvio = sd(p_inc100k, na.rm = TRUE) ,
+    sup = media + 2 * desvio,
+    inf = media - 2 * desvio
+  )
+
+# Visualizando a tabela {`dengue_stat`}
+head(dengue_stat)
+
+
+```
+<br> 
+<div align="center">
+    <div style="display: flex; align-items: center;">
+        <img src="img/7.png">
+    </div>
+</div>
+
+<br> <br> 
+
+```R
+# Definindo a base a ser utilizada
+ggplot(data = dengue_stat) +
+  
+  # Definindo argumentos estéticos com as variáveis usadas em x e em y
+  aes(x = sem_epi, y = media) + 
+  
+  # Adicionando a linha referente à incidência média de dengue.
+  # Adicionando uma geometria de linha na cor azul e largura de 1.2 pixel
+  geom_line(aes(color = 'cor_media_casos'), size = 1.2) +
+  
+  # Adicionando uma geometria de linha na cor laranja. Além disso, inserindo
+  # um argumento estético para o eixo y que, no caso, é a variável de limite
+  # superior
+  geom_line(aes(y = sup, color = 'cor_limite'), size = 1.2) +
+  
+  # Adicionando uma geometria de colunas utilizando a base de dados
+  # {`dengue_2022`} e y como a incidência de dengue em 2022. O argumento
+  # `fill` refere-se à cor das barras e `alpha` à transparência.
+  geom_col(data = dengue_2022,
+           aes(y = p_inc100k, fill = 'cor_incidencia'), alpha = 0.4) +
+  
+  # Arrumando o eixo x, definindo o intervalo de tempo que será utilizado (`breaks`) 
+  # uma sequência de semanas epidemiológicas de 1 a 53 
+  # o argumento `expand` ajuda nesse processo.
+  scale_x_continuous(breaks = 1:53, expand = c(0, 0)) +
+  
+  # Definindo os títulos dos eixos x e y
+  labs(x = 'Semana Epidemiológica',
+       y = 'Incidência por 100 mil hab.',
+       title = 'Diagrama de controle de dengue em Foz do Iguaçu/PR no ano de 
+	   2022.') +
+  
+  # Definindo o tema do gráfico
+  theme_classic() +
+  
+  # Criando a legenda das linhas
+  scale_color_manual(
+    name = "",
+    values = c('cor_media_casos' = 'darkblue', 'cor_limite' = 'red'),
+    labels = c("Incidência média", "Limite superior")
+  ) +
+  
+  # Criando a legenda das barras
+  scale_fill_manual(
+    name = "",
+    values = c('cor_incidencia' = 'deepskyblue'),
+    labels = "Incidência de dengue em 2022"
+  )
+
+```
+<br> 
+<div align="center">
+    <div style="display: flex; align-items: center;">
+        <img src="img/Rplot.png">
+    </div>
+</div>
+<br> 
+
+Ao observar a Figura acima verificamos que 2022 foi um ano que ultrapassou o limite superior do diagrama de controle. Portanto, concluímos que Foz do Iguaçu pode estar vivendo um ano epidêmico. Ao observarmos a distribuição dos dados verificamos também que **o padrão sazonal foi tardio em relação aos anos não epidêmicos**. Isso significa que as semanas de maior incidência estavam entre as semanas epidemiológicas **10 e 16 (entre o mês de março e primeira quinzena de abril)**. Já em 2022 as semanas com maior incidência ficaram entre **17 e 23 (última semana de abril a primeira semana de junho**), com o pico na semana **19 (entre 8 e 14 de maio)**.
+
+Outro ponto a ser destacado na análise é que o limite superior (linha de cor vermelha) possui um padrão que oscila um pouco quando temos taxas de incidência maiores de 200 por 100 mil habitantes. Algumas vezes precisamos alisar estas oscilações e minimizar esse efeito utilizando a função **stat_smooth()** para suavizar as médias e o limite superior. Para isto, basta substituir a função **geom_line()** pela função **stat_smooth()** no script utilizado.
+
+
+
+# 3. Construindo o diagrama de controle de Hepatite A
+
+ É possível construir um diagrama de controle para qualquer doença que tenha seus casos suspeitos notificados com registro do início dos sintomas. Nesta subseção vamos analisar a situação da Hepatite A no município São Paulo (SP), utilizando como referência a avaliação do ano de 2017.
+
+A vigilância das Hepatites Virais visa monitorar os casos da doença no território, recomendando ações que controlem e previnam em tempo oportuno as infecções. Dessa forma, analisar a ocorrência de casos ou surtos é estratégico para mitigar a doença. Aqui utilizaremos um diagrama de controle para avaliar um dos agravos de rotina para a vigilância em saúde.
