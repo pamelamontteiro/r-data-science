@@ -9,6 +9,13 @@
 
 <br> 
 
+<p align="center">
+    <a href="https://github.com/pamelamontteiro/r-data-science/blob/main/img/certificado.pdf" target="_blank">
+        <img src="https://img.shields.io/static/v1?label=Status&message=CONCLUIDO&color=blue&style=for-the-badge"/>
+    </a>
+</p>
+
+
 # Controle estatísticos aplicados à vigilância em saúde, especificamente no monitoramento da dengue (R)
 
 
@@ -619,16 +626,11 @@ abline(
 Percebemos que 2007 e 2014 registraram número de casos de Hepatite A maior, pois suas medianas (linha mais grossa dentro do retângulo) são mais altas que os demais boxs. Além disso, é possível observar que 2014 registrou um pico de casos, se destacando na série. Já sabemos, portanto, que 2007 e 2014 apresentaram aumento nos casos de Hepatite A e por isso serão considerados para análise anos epidêmicos.
 
 # Certificações e Certificados
-<p align="center">
-    <a href="https://autenticidade.ufsc.br/documents/validate/CERT-7915-8427-0612-5842" target="_blank">
-        <img src="https://img.shields.io/static/v1?label=Status&message=CONCLUIDO&color=blue&style=for-the-badge"/>
-    </a>
-</p>
 
 
 <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
     <!-- Logo da UFSC -->
-    <a href="https://autenticidade.ufsc.br/documents/validate/CERT-7915-8427-0612-5842" target="_blank">
+    <a href="https://github.com/pamelamontteiro/r-data-science/blob/main/img/certificado.pdf" target="_blank">
         <img src="img/Ufsc.png" alt="UFSC" height="80">
     </a>
 
