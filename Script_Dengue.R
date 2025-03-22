@@ -119,6 +119,7 @@ dengue_stat <- dengue_foz |>
 # Visualizando a tabela {`dengue_stat`}
 head(dengue_stat)
 
+# Gráfico do Diagrama de Controle de dengue em Foz do Iguaçu/PR.
 
 # Definindo a base a ser utilizada
 ggplot(data = dengue_stat) +

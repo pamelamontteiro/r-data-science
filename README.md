@@ -462,3 +462,179 @@ Outro ponto a ser destacado na análise é que o limite superior (linha de cor v
  É possível construir um diagrama de controle para qualquer doença que tenha seus casos suspeitos notificados com registro do início dos sintomas. Nesta subseção vamos analisar a situação da Hepatite A no município São Paulo (SP), utilizando como referência a avaliação do ano de 2017.
 
 A vigilância das Hepatites Virais visa monitorar os casos da doença no território, recomendando ações que controlem e previnam em tempo oportuno as infecções. Dessa forma, analisar a ocorrência de casos ou surtos é estratégico para mitigar a doença. Aqui utilizaremos um diagrama de controle para avaliar um dos agravos de rotina para a vigilância em saúde.
+
+``` R
+# criando objeto do tipo dataframe (tabela) {sinan_hep_sp_2007_2016} com o 
+# banco de dados {sinan_hep_sp_2007_2016.dbf}
+sinan_hep_sp_2007_2016 <- read.dbf("Dados/sinan_hep_sp_2007_2016.dbf", as.is = TRUE)
+
+# criando objeto do tipo dataframe (tabela) {sinan_hep_sp_fev_2017} com o 
+# banco de dados {sinan_hep_sp_fev_2017.dbf}
+sinan_hep_sp_fev_2017 <- read.dbf("Dados/sinan_hep_sp_fev_2017.dbf", as.is = TRUE)
+```
+
+Para calcular a frequência de casos por semana epidemiológica e ano com base na data dos primeiros sintomas. 
+
+1.  **Transformar a variável de data** no formato correto (caso necessário).
+
+*   **epiweek(date) – Semana epidemiológica**
+*   Retorna a **semana epidemiológica** de uma data no formato **Date**.
+
+*   A contagem da semana epidemiológica pode diferir da semana do ano tradicional (ISO 8601), pois segue um padrão epidemiológico.
+
+``` R
+library(lubridate)
+data <- as.Date("2024-03-22")
+epiweek(data)  # Retorna a semana epidemiológica correspondente
+
+```
+2.  **Criar as variáveis de semana epidemiológica e ano** utilizando as funções **epiweek() e year()** do pacote **lubridate**.
+
+*   **year(date) – Ano**
+*   Retorna **apenas o ano** de uma data.
+
+Exemplo:
+``` R
+year(data)  # Retorna 2024
+```
+3.  **Adicionar essas colunas ao dataset** usando a função **mutate()** do pacote **dplyr**.
+
+*   A **função mutate()** do pacote **dplyr** é usada para criar ou modificar colunas em um **dataframe**.
+
+*   Exemplo de uso para criar as colunas **semana_epi** e **ano**:
+``` R
+library(dplyr)
+
+df <- df %>%
+  mutate(
+    semana_epi = epiweek(data_sintomas),
+    ano = year(data_sintomas)
+  )
+
+```
+4.  **Agrupar e contar os casos** por semana epidemiológica e ano.
+
+*   Após criar as novas colunas, podemos contar o número de casos por semana epidemiológica e ano
+*   **count() – Contar ocorrências**
+
+``` R
+
+df_resumo <- df %>%
+  count(ano, semana_epi)
+
+
+```
+Isso gerará um dataframe com a contagem de casos para cada combinação de ano e semana epidemiológica.
+
+### Resumo da Análise:
+
+O objetivo da análise é identificar **anos epidêmico**s de **Hepatite A** no Estado de São Paulo entre **2007 e 2016**, observando a variação no número de casos confirmados. Para isso, utilizamos os dados das tabelas **{sinan_hep_sp_cont_07_16} e {sinan_hep_sp_cont_fev17}**.
+
+
+```R
+
+# Criando o objeto {`sinan_hep_sp_cont_fev17`} e 
+# realizando a contagem dos casos segundo a
+# semana epidemiológica e ano dos primeiros sintomas
+
+sinan_hep_sp_cont_fev17 <- sinan_hep_sp_fev_2017 |>
+  mutate(sem_epi = epiweek(DT_SIN_PRI),
+         ano = year(DT_SIN_PRI)) |>
+  count(ano, sem_epi)
+
+
+# Definindo a mediana geral de casos confirmados entre 2007 e 2016
+mediana_geral <- median(sinan_hep_sp_cont_07_16$n)
+
+
+# utilizando a função `boxplot()` para criar o gráfico
+boxplot(
+  
+  # Definindo o cruzamento número de casos por ano
+  # Aqui utilizamos o símbolo "~" para sinalizar o cruzamento das variáveis
+  sinan_hep_sp_cont_07_16$n ~ sinan_hep_sp_cont_07_16$ano,
+  
+  # Definindo os títulos dos eixos x e y
+  ylab = 'Número de casos confirmados de Hepatite A',
+  xlab = 'Ano dos primeiros sintomas',
+  
+  # Definindo o título do boxplot
+  main = 'Número de casos confirmados de Hepatite A em São Paulo/SP entre 2007-2016'
+)
+
+# Criando linhas de análise
+abline(
+  h = mediana_geral,
+  lty = 2,
+  lwd = 2,
+  col = "red"
+)
+
+
+```
+
+### Etapas do Processo
+
+1.   **Organizar os dados**:
+
+*   Garantir que temos as variáveis **n (número de casos confirmados)** e **ano (ano do início dos sintomas)**.
+
+2- **Gerar o gráfico Boxplot:**
+
+*   Utilizar a função **boxplot()** para visualizar a distribuição dos casos por ano.
+
+*   A **mediana geral (linha laranja)** servirá como um **parâmetro de referência** para identificar anos com um número anormalmente alto de casos.
+
+3.  Identificar anos epidêmicos:
+
+*   Anos que apresentam **valores acima da mediana** de forma significativa podem ser considerados anos epidêmicos.
+
+*   Esses anos podem ser removidos posteriormente para cálculos mais precisos no **diagrama de controle**.
+
+<br> 
+<div align="center">
+    <div style="display: flex; align-items: center;">
+        <img src="img/passo4.png">
+    </div>
+</div>
+
+<br> <br> 
+
+*   Cada **retângulo (box)** representa a **variação do número de casos** dentro de cada ano,
+*   A **linha mais grossa dentro do retângulo (box)** representa a **mediana** de casos de cada ano,
+*   A **linha reta tracejada** na cor **preta** acima do retângulo (box) representa o **limite superior** de cada ano,
+*   Os círculos ao alto **(outliers)** representam valores muito altos, além dos limites em cada ano, e
+*   A **linha tracejada** na cor **vermelha** representa a mediana geral de todos os anos (2007 a 2016).
+
+<br> 
+<div align="center">
+    <div style="display: flex; align-items: center;">
+        <img src="img/8.png">
+    </div>
+</div>
+
+<br> <br> 
+
+
+Percebemos que 2007 e 2014 registraram número de casos de Hepatite A maior, pois suas medianas (linha mais grossa dentro do retângulo) são mais altas que os demais boxs. Além disso, é possível observar que 2014 registrou um pico de casos, se destacando na série. Já sabemos, portanto, que 2007 e 2014 apresentaram aumento nos casos de Hepatite A e por isso serão considerados para análise anos epidêmicos.
+
+# Certificações e Certificados
+<p align="center">
+    <a href="https://autenticidade.ufsc.br/documents/validate/CERT-7915-8427-0612-5842" target="_blank">
+        <img src="https://img.shields.io/static/v1?label=Status&message=CONCLUIDO&color=blue&style=for-the-badge"/>
+    </a>
+</p>
+
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+    <!-- Logo da UFSC -->
+    <a href="https://autenticidade.ufsc.br/documents/validate/CERT-7915-8427-0612-5842" target="_blank">
+        <img src="img/Ufsc.png" alt="UFSC" height="80">
+    </a>
+
+<!-- Logo da ABRASCO -->
+  
+<img src="img/abrasco.png" alt="ABRASCO" height="80">
+   
+</div>
+
