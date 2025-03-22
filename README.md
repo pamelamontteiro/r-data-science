@@ -640,3 +640,14 @@ Percebemos que 2007 e 2014 registraram número de casos de Hepatite A maior, poi
    
 </div>
 
+
+#
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px; height: 100vh;">
+    <!-- Logo da UFSC -->
+    <a href="https://github.com/pamelamontteiro/r-data-science/blob/main/img/certificado.pdf" target="_blank">
+        <img src="img/Ufsc.png" alt="UFSC" height="80">
+    </a>
+
+<!-- Logo da ABRASCO -->
+<img src="img/abrasco.png" alt="ABRASCO" height="80">
+</div>
